@@ -112,7 +112,7 @@ class _MainNavigationState extends State<MainNavigation> {
               label: 'Twin Reality',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.monitoring),
+              icon: Icon(Icons.analytics),
               label: 'Live Bias',
             ),
           ],
