@@ -48,6 +48,9 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
       'changed_value': _newValueController.text,
     };
 
+    // Close keyboard before showing results
+    FocusScope.of(context).unfocus();
+
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8000/explain'),
@@ -70,7 +73,8 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
           'twin_prediction': 1,
           'original_confidence': 72,
           'twin_confidence': 89,
-          'explanation': '⚡ $_changedField changed: $_gender → ${_newValueController.text}\n📊 Approval probability increased by 17%\n🔍 Historical patterns show $_changedField bias in training data'
+          'explanation':
+              '⚡ $_changedField changed: $_gender → ${_newValueController.text}\n📊 Approval probability increased by 17%\n🔍 Historical patterns show $_changedField bias in training data'
         };
         _showResults = true;
       });
@@ -113,7 +117,11 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
       children: [
         Container(width: 4, height: 20, color: const Color(0xFF00BFA5)),
         const SizedBox(width: 12),
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white)),
+        Text(title,
+            style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.white)),
       ],
     );
   }
@@ -121,7 +129,9 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
   Widget _buildDynamicNewValueField() {
     if (_changedField == 'gender') {
       return DropdownButtonFormField<String>(
-        value: _newValueController.text.isEmpty ? 'male' : _newValueController.text,
+        value: _newValueController.text.isEmpty
+            ? 'male'
+            : _newValueController.text,
         decoration: _inputDec('New Value'),
         dropdownColor: const Color(0xFF1E1E2E),
         items: const [
@@ -134,7 +144,9 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
       );
     } else if (_changedField == 'education') {
       return DropdownButtonFormField<String>(
-        value: _newValueController.text.isEmpty ? 'bachelors' : _newValueController.text,
+        value: _newValueController.text.isEmpty
+            ? 'bachelors'
+            : _newValueController.text,
         decoration: _inputDec('New Value'),
         dropdownColor: const Color(0xFF1E1E2E),
         items: const [
@@ -149,13 +161,16 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
       );
     } else if (_changedField == 'employment_status') {
       return DropdownButtonFormField<String>(
-        value: _newValueController.text.isEmpty ? 'employed' : _newValueController.text,
+        value: _newValueController.text.isEmpty
+            ? 'employed'
+            : _newValueController.text,
         decoration: _inputDec('New Value'),
         dropdownColor: const Color(0xFF1E1E2E),
         items: const [
           DropdownMenuItem(value: 'employed', child: Text('Employed')),
           DropdownMenuItem(value: 'unemployed', child: Text('Unemployed')),
-          DropdownMenuItem(value: 'self_employed', child: Text('Self Employed')),
+          DropdownMenuItem(
+              value: 'self_employed', child: Text('Self Employed')),
         ],
         onChanged: (val) {
           if (val != null) _newValueController.text = val;
@@ -226,7 +241,8 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
               decoration: _inputDec('Education'),
               dropdownColor: const Color(0xFF1E1E2E),
               items: const [
-                DropdownMenuItem(value: 'high_school', child: Text('High School')),
+                DropdownMenuItem(
+                    value: 'high_school', child: Text('High School')),
                 DropdownMenuItem(value: 'bachelors', child: Text('Bachelors')),
                 DropdownMenuItem(value: 'masters', child: Text('Masters')),
                 DropdownMenuItem(value: 'phd', child: Text('PhD')),
@@ -240,14 +256,14 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
               dropdownColor: const Color(0xFF1E1E2E),
               items: const [
                 DropdownMenuItem(value: 'employed', child: Text('Employed')),
-                DropdownMenuItem(value: 'unemployed', child: Text('Unemployed')),
-                DropdownMenuItem(value: 'self_employed', child: Text('Self Employed')),
+                DropdownMenuItem(
+                    value: 'unemployed', child: Text('Unemployed')),
+                DropdownMenuItem(
+                    value: 'self_employed', child: Text('Self Employed')),
               ],
               onChanged: (val) => setState(() => _employment = val!),
             ),
-            
             const Divider(height: 48, color: Colors.white10),
-            
             _buildSectionHeader('Alternate Reality (Twin)'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -259,19 +275,24 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                 DropdownMenuItem(value: 'income', child: Text('Income')),
                 DropdownMenuItem(value: 'gender', child: Text('Gender')),
                 DropdownMenuItem(value: 'education', child: Text('Education')),
-                DropdownMenuItem(value: 'employment_status', child: Text('Employment Status')),
+                DropdownMenuItem(
+                    value: 'employment_status',
+                    child: Text('Employment Status')),
               ],
               onChanged: (val) => setState(() {
                 _changedField = val!;
-                if (val == 'gender') _newValueController.text = 'male';
-                else if (val == 'education') _newValueController.text = 'bachelors';
-                else if (val == 'employment_status') _newValueController.text = 'employed';
-                else _newValueController.text = ''; 
+                if (val == 'gender')
+                  _newValueController.text = 'male';
+                else if (val == 'education')
+                  _newValueController.text = 'bachelors';
+                else if (val == 'employment_status')
+                  _newValueController.text = 'employed';
+                else
+                  _newValueController.text = '';
               }),
             ),
             const SizedBox(height: 16),
             _buildDynamicNewValueField(),
-            
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -284,7 +305,6 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                 ),
               ),
             ),
-            
             if (_showResults) ...[
               const SizedBox(height: 32),
               Row(
@@ -294,24 +314,38 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF141420),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.15), width: 1),
                       ),
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('ORIGINAL', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                          const Text('ORIGINAL',
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Text(
-                            _explanationResult?['original_prediction'] == 1 ? 'Approved' : 'Rejected',
-                            style: TextStyle(
-                              fontSize: 24, 
-                              fontWeight: FontWeight.bold,
-                              color: _explanationResult?['original_prediction'] == 1 ? const Color(0xFF66BB6A) : const Color(0xFFEF5350),
-                            )
-                          ),
+                              _explanationResult?['original_prediction'] == 1
+                                  ? 'Approved'
+                                  : 'Rejected',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: _explanationResult?[
+                                            'original_prediction'] ==
+                                        1
+                                    ? const Color(0xFF66BB6A)
+                                    : const Color(0xFFEF5350),
+                              )),
                           const SizedBox(height: 4),
-                          Text('${_explanationResult?['original_confidence'] ?? 72}% confidence', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                          AnimatedCounter(
+                            value: _explanationResult?['original_confidence'] ??
+                                72,
+                            suffix: '% confidence',
+                          ),
                         ],
                       ),
                     ),
@@ -322,7 +356,8 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF141420),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.15), width: 1),
                       ),
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -331,31 +366,45 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('TWIN', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+                              const Text('TWIN',
+                                  style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold)),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF00BFA5).withOpacity(0.2),
+                                  color:
+                                      const Color(0xFF00BFA5).withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  '↑ 17% boost', 
-                                  style: TextStyle(color: Color(0xFF00BFA5), fontSize: 10, fontWeight: FontWeight.bold)
-                                ),
+                                child: const Text('↑ 17% boost',
+                                    style: TextStyle(
+                                        color: Color(0xFF00BFA5),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _explanationResult?['twin_prediction'] == 1 ? 'Approved' : 'Rejected',
-                            style: TextStyle(
-                              fontSize: 24, 
-                              fontWeight: FontWeight.bold,
-                              color: _explanationResult?['twin_prediction'] == 1 ? const Color(0xFF66BB6A) : const Color(0xFFEF5350),
-                            )
-                          ),
+                              _explanationResult?['twin_prediction'] == 1
+                                  ? 'Approved'
+                                  : 'Rejected',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color:
+                                    _explanationResult?['twin_prediction'] == 1
+                                        ? const Color(0xFF66BB6A)
+                                        : const Color(0xFFEF5350),
+                              )),
                           const SizedBox(height: 4),
-                          Text('${_explanationResult?['twin_confidence'] ?? 89}% confidence', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                          AnimatedCounter(
+                            value: _explanationResult?['twin_confidence'] ?? 89,
+                            suffix: '% confidence',
+                          ),
                         ],
                       ),
                     ),
@@ -368,8 +417,11 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0D1117),
-                  border: const Border(left: BorderSide(color: Color(0xFF00BFA5), width: 4)),
-                  borderRadius: const BorderRadius.only(topRight: Radius.circular(8), bottomRight: Radius.circular(8)),
+                  border: const Border(
+                      left: BorderSide(color: Color(0xFF00BFA5), width: 4)),
+                  borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(8),
+                      bottomRight: Radius.circular(8)),
                 ),
                 child: Text(
                   _explanationResult?['explanation'] ?? '',
@@ -385,6 +437,64 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class AnimatedCounter extends StatefulWidget {
+  final int value;
+  final String suffix;
+
+  const AnimatedCounter({super.key, required this.value, required this.suffix});
+
+  @override
+  State<AnimatedCounter> createState() => _AnimatedCounterState();
+}
+
+class _AnimatedCounterState extends State<AnimatedCounter>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _animation = Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(AnimatedCounter oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _animation =
+          Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+      );
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Text('${_animation.value.toInt()}${widget.suffix}',
+            style: const TextStyle(color: Colors.grey, fontSize: 14));
+      },
     );
   }
 }
