@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   fl_chart: ^0.66.0
+  http: ^0.13.6
 
 dev_dependencies:
   flutter_test:
@@ -19,3 +20,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  
