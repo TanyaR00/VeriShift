@@ -1,20 +1,16 @@
+"""
+Prediction Service
+Calls ml_engine predictor for real inference.
+Falls back to dummy if model not trained yet.
+"""
+
 from shared.schemas import PredictionInput, PredictionOutput
+from ml_engine.predictor import predict_single
+
 
 def predict(data: PredictionInput) -> PredictionOutput:
     """
-    Returns a dummy prediction based on the input data.
+    Run model inference on input data.
+    Calls ml_engine.predictor.predict_single
     """
-    # TODO: connect ml_engine
-    # Example: from ml_engine.models import predict as ml_predict
-    # return ml_predict(data)
-    
-    # Dummy logic: if income > 50000, approve (1), else reject (0)
-    prediction = 1 if data.income > 50000 else 0
-    confidence = 0.85
-    bias_score = 0.02
-    
-    return PredictionOutput(
-        prediction=prediction,
-        confidence=confidence,
-        bias_score=bias_score
-    )
+    return predict_single(data)

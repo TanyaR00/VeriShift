@@ -19,13 +19,29 @@ app.add_middleware(
 def predict_endpoint(data: PredictionInput):
     return predict(data)
 
-@app.post("/create-twin", response_model=PredictionOutput)
+@app.post("/create-twin")
 def create_twin_endpoint(data: TwinInput):
-    return create_twin(data)
+    twin_result = create_twin(data)
+    explanation_result = explain(
+        original_prediction=twin_result["original_prediction"],
+        twin_prediction=twin_result["twin_prediction"],
+        changed_field=twin_result["changed_field"],
+        original_confidence=twin_result["original_confidence"],
+        twin_confidence=twin_result["twin_confidence"]
+    )
+    return {**twin_result, **explanation_result.model_dump()}
 
-@app.post("/explain", response_model=ExplanationOutput)
+@app.post("/explain")
 def explain_endpoint(data: TwinInput):
-    return explain(data)
+    twin_result = create_twin(data)
+    explanation_result = explain(
+        original_prediction=twin_result["original_prediction"],
+        twin_prediction=twin_result["twin_prediction"],
+        changed_field=twin_result["changed_field"],
+        original_confidence=twin_result["original_confidence"],
+        twin_confidence=twin_result["twin_confidence"]
+    )
+    return {**twin_result, **explanation_result.model_dump()}
 
 @app.post("/stream-prediction")
 def stream_prediction_endpoint(data: PredictionInput):

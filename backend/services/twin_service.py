@@ -1,23 +1,20 @@
-from shared.schemas import TwinInput, PredictionOutput
+"""
+Twin Service
+Creates counterfactual 'twin' predictions.
+Changes exactly one feature and compares outcomes.
+"""
 
-def create_twin(data: TwinInput) -> PredictionOutput:
+from shared.schemas import TwinInput
+from ml_engine.predictor import predict_twin
+
+
+def create_twin(data: TwinInput) -> dict:
     """
-    Returns a dummy prediction based on the twin input.
+    Generate twin prediction — one field changed, all else identical.
+    Calls ml_engine.predictor.predict_twin
     """
-    # TODO: connect ml_engine
-    # Example: from ml_engine.models import generate_twin as ml_generate_twin
-    # return ml_generate_twin(data)
-    
-    # Dummy logic: invert the logic of the original for demonstration
-    # If original income > 50000 -> 1, let's say twin changes it to < 50000 -> 0
-    prediction = 0 if data.original.income > 50000 else 1
-    
-    # Random confidence and bias for the twin
-    confidence = 0.75
-    bias_score = 0.05
-    
-    return PredictionOutput(
-        prediction=prediction,
-        confidence=confidence,
-        bias_score=bias_score
+    return predict_twin(
+        original=data.original,
+        changed_field=data.changed_field,
+        changed_value=data.changed_value,
     )
