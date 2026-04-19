@@ -53,7 +53,7 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/explain'),
+        Uri.parse('http://localhost:8000/create-twin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(twinInput),
       );
@@ -71,8 +71,8 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
         _explanationResult = {
           'original_prediction': 0,
           'twin_prediction': 1,
-          'original_confidence': 72,
-          'twin_confidence': 89,
+          'original_confidence': 72.0,
+          'twin_confidence': 89.0,
           'explanation':
               '⚡ $_changedField changed: $_gender → ${_newValueController.text}\n📊 Approval probability increased by 17%\n🔍 Historical patterns show $_changedField bias in training data'
         };
@@ -342,8 +342,10 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                               )),
                           const SizedBox(height: 4),
                           AnimatedCounter(
-                            value: _explanationResult?['original_confidence'] ??
-                                72,
+                            value:
+                                ((_explanationResult?['original_confidence'] ??
+                                        0.72) *
+                                    100),
                             suffix: '% confidence',
                           ),
                         ],
@@ -379,7 +381,8 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                                       const Color(0xFF00BFA5).withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('↑ 17% boost',
+                                child: Text(
+                                    '↑ ${((_explanationResult?['confidence_delta'] ?? 0.17) * 100).toStringAsFixed(0)}% boost',
                                     style: TextStyle(
                                         color: Color(0xFF00BFA5),
                                         fontSize: 10,
@@ -402,7 +405,9 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                               )),
                           const SizedBox(height: 4),
                           AnimatedCounter(
-                            value: _explanationResult?['twin_confidence'] ?? 89,
+                            value: ((_explanationResult?['twin_confidence'] ??
+                                    0.89) *
+                                100),
                             suffix: '% confidence',
                           ),
                         ],
@@ -442,7 +447,7 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
 }
 
 class AnimatedCounter extends StatefulWidget {
-  final int value;
+  final double value;
   final String suffix;
 
   const AnimatedCounter({super.key, required this.value, required this.suffix});
@@ -463,7 +468,7 @@ class _AnimatedCounterState extends State<AnimatedCounter>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _animation = Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
+    _animation = Tween<double>(begin: 0, end: widget.value).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
     _controller.forward();
@@ -473,8 +478,7 @@ class _AnimatedCounterState extends State<AnimatedCounter>
   void didUpdateWidget(AnimatedCounter oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.value != widget.value) {
-      _animation =
-          Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
+      _animation = Tween<double>(begin: 0, end: widget.value).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOut),
       );
       _controller.forward(from: 0);
