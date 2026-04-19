@@ -372,6 +372,9 @@ def run_bias_pipeline(df: pd.DataFrame, target_col: str, sensitive_col: str,
     # Step 3: Bias Detection
     print("[3/5] Running bias detection...")
     sensitive_values = X_test_raw[sensitive_col].values
+    if set(sensitive_values).issubset({0, 1}):
+        sensitive_values = np.where(sensitive_values == 1, "Male", "Female")
+
     detector = BiasDetector(predictions, y_test, sensitive_values)
 
     spd, group_rates = detector.statistical_parity_difference()

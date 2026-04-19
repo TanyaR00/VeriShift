@@ -1,0 +1,45 @@
+{
+  "bias_score": 0.3473,
+  "affected_group": "Female",
+  "trend": "increasing",
+  "statistical_parity_difference": -0.2772,
+  "equal_opportunity_difference": -0.4175,
+  "group_positive_rates": {
+    "Female": 0.2184,
+    "Male": 0.4956
+  },
+  "group_true_positive_rates": {
+    "Female": 0.375,
+    "Male": 0.7925
+  },
+  "group_accuracy": {
+    "Female": 0.6897,
+    "Male": 0.7788
+  },
+  "overall_accuracy": 0.74,
+  "psi_score": 0.0471,
+  "kl_divergence": 0.5244,
+  "drift_status": "stable",
+  "time_analysis": {
+    "trend": "increasing",
+    "slope": 0.03,
+    "mean_bias": 0.246,
+    "max_bias": 0.3,
+    "min_bias": 0.18,
+    "scores": [
+      0.18,
+      0.22,
+      0.25,
+      0.28,
+      0.3
+    ]
+  },
+  "feature_importance": {
+    "test_score": 1.6257179722159376,
+    "experience_years": 0.8323610547872604,
+    "gender": 0.7349493511070075,
+    "race": 0.12078622706145417,
+    "age": 0.09956040371463443,
+    "education_years": 0.0477147597663449
+  }
+}
