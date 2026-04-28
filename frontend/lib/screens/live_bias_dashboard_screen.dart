@@ -9,16 +9,17 @@ class LiveBiasDashboardScreen extends StatefulWidget {
   const LiveBiasDashboardScreen({super.key});
 
   @override
-  State<LiveBiasDashboardScreen> createState() => _LiveBiasDashboardScreenState();
+  State<LiveBiasDashboardScreen> createState() =>
+      _LiveBiasDashboardScreenState();
 }
 
 class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
     with SingleTickerProviderStateMixin {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String baseUrl = 'https://verishift.onrender.com';
 
   // Chart data
   List<FlSpot> _chartSpots = [];
-  
+
   // Metrics
   double _biasScore = 0.85;
   String _affectedGroup = 'Female';
@@ -65,14 +66,15 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
 
   Future<void> _fetchData() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/stream-prediction')).timeout(const Duration(seconds: 2));
+      final response = await http
+          .get(Uri.parse('$baseUrl/stream-prediction'))
+          .timeout(const Duration(seconds: 2));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         final scores = List<double>.from(
-          (data['timeline'] as List).map((s) => (s as num).toDouble())
-        );
+            (data['timeline'] as List).map((s) => (s as num).toDouble()));
 
         final spots = scores.asMap().entries.map((e) {
           return FlSpot(e.key.toDouble(), e.value);
@@ -84,8 +86,8 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
             _biasScore = (data['bias_score'] as num).toDouble();
             _affectedGroup = data['affected_group'].toString();
             if (_affectedGroup.isNotEmpty) {
-              _affectedGroup = _affectedGroup[0].toUpperCase() + 
-                               _affectedGroup.substring(1);
+              _affectedGroup =
+                  _affectedGroup[0].toUpperCase() + _affectedGroup.substring(1);
             }
             _trend = data['trend'].toString();
             _lastUpdated = 'just now'; // Realtime update
@@ -126,31 +128,31 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
 
   // Phase boundary lines at x=6 and x=12
   List<VerticalLine> get _phaseLines => [
-    VerticalLine(
-      x: 6,
-      color: Colors.white24,
-      strokeWidth: 1,
-      dashArray: [4, 4],
-      label: VerticalLineLabel(
-        show: true,
-        alignment: Alignment.topRight,
-        style: const TextStyle(color: Colors.white38, fontSize: 10),
-        labelResolver: (_) => 'Phase 2',
-      ),
-    ),
-    VerticalLine(
-      x: 12,
-      color: Colors.white24,
-      strokeWidth: 1,
-      dashArray: [4, 4],
-      label: VerticalLineLabel(
-        show: true,
-        alignment: Alignment.topRight,
-        style: const TextStyle(color: Colors.white38, fontSize: 10),
-        labelResolver: (_) => 'Phase 3',
-      ),
-    ),
-  ];
+        VerticalLine(
+          x: 6,
+          color: Colors.white24,
+          strokeWidth: 1,
+          dashArray: [4, 4],
+          label: VerticalLineLabel(
+            show: true,
+            alignment: Alignment.topRight,
+            style: const TextStyle(color: Colors.white38, fontSize: 10),
+            labelResolver: (_) => 'Phase 2',
+          ),
+        ),
+        VerticalLine(
+          x: 12,
+          color: Colors.white24,
+          strokeWidth: 1,
+          dashArray: [4, 4],
+          label: VerticalLineLabel(
+            show: true,
+            alignment: Alignment.topRight,
+            style: const TextStyle(color: Colors.white38, fontSize: 10),
+            labelResolver: (_) => 'Phase 3',
+          ),
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -171,8 +173,8 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
               animation: _pulseAnimation,
               builder: (context, child) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1A0500),
                     borderRadius: BorderRadius.circular(12),
@@ -188,10 +190,10 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Color.fromRGBO(
-                            255, 82, 82,
-                            _backendConnected 
-                                ? _pulseAnimation.value 
-                                : 0.3,
+                            255,
+                            82,
+                            82,
+                            _backendConnected ? _pulseAnimation.value : 0.3,
                           ),
                         ),
                       ),
@@ -236,8 +238,7 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                       const Spacer(),
                       Text(
                         'Phase 1   Phase 2   Phase 3',
-                        style: TextStyle(
-                            color: Colors.white38, fontSize: 11),
+                        style: TextStyle(color: Colors.white38, fontSize: 11),
                       ),
                     ],
                   ),
@@ -260,8 +261,8 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                         : LineChart(
                             LineChartData(
                               backgroundColor: const Color(0xFF0D0D1A),
-                              extraLinesData: ExtraLinesData(
-                                  verticalLines: _phaseLines),
+                              extraLinesData:
+                                  ExtraLinesData(verticalLines: _phaseLines),
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: true,
@@ -303,11 +304,9 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                                   ),
                                 ),
                                 topTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                                 rightTitles: const AxisTitles(
-                                    sideTitles:
-                                        SideTitles(showTitles: false)),
+                                    sideTitles: SideTitles(showTitles: false)),
                               ),
                               borderData: FlBorderData(show: false),
                               lineBarsData: [
@@ -373,8 +372,7 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                     decoration: BoxDecoration(
                       color: const Color(0xFF1A1500),
                       border: const Border(
-                        left: BorderSide(
-                            color: Color(0xFFFFB300), width: 4),
+                        left: BorderSide(color: Color(0xFFFFB300), width: 4),
                       ),
                       borderRadius: const BorderRadius.only(
                         topRight: Radius.circular(8),
@@ -406,7 +404,8 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFFFB300), size: 18),
+                                  const Icon(Icons.warning_amber_rounded,
+                                      color: Color(0xFFFFB300), size: 18),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
@@ -442,11 +441,15 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
                   // Stats detail row
                   Row(
                     children: [
-                      _buildStatChip('PSI Score', '0.047 Stable', icon: Icons.analytics, iconColor: const Color(0xFF00BFA5)),
+                      _buildStatChip('PSI Score', '0.047 Stable',
+                          icon: Icons.analytics,
+                          iconColor: const Color(0xFF00BFA5)),
                       const SizedBox(width: 8),
-                      _buildStatChip('KL Divergence', '0.524', icon: Icons.show_chart),
+                      _buildStatChip('KL Divergence', '0.524',
+                          icon: Icons.show_chart),
                       const SizedBox(width: 8),
-                      _buildStatChip('Model Accuracy', '82.75%', icon: Icons.check_circle_outline),
+                      _buildStatChip('Model Accuracy', '82.75%',
+                          icon: Icons.check_circle_outline),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -468,8 +471,7 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
         decoration: BoxDecoration(
           color: const Color(0xFF141420),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: Colors.white.withOpacity(0.10), width: 1),
+          border: Border.all(color: Colors.white.withOpacity(0.10), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -506,22 +508,21 @@ class _LiveBiasDashboardScreenState extends State<LiveBiasDashboardScreen>
     );
   }
 
-  Widget _buildStatChip(String label, String value, {IconData? icon, Color? iconColor}) {
+  Widget _buildStatChip(String label, String value,
+      {IconData? icon, Color? iconColor}) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: const Color(0xFF0D0D1A),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: Colors.white.withOpacity(0.08), width: 1),
+          border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: const TextStyle(
-                    color: Colors.white38, fontSize: 10)),
+                style: const TextStyle(color: Colors.white38, fontSize: 10)),
             const SizedBox(height: 4),
             Row(
               children: [

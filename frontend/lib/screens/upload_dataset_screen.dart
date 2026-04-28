@@ -14,7 +14,8 @@ class UploadDatasetScreen extends StatefulWidget {
   State<UploadDatasetScreen> createState() => _UploadDatasetScreenState();
 }
 
-class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTickerProviderStateMixin {
+class _UploadDatasetScreenState extends State<UploadDatasetScreen>
+    with SingleTickerProviderStateMixin {
   String? _selectedFileName;
   int _selectedFileSize = 0;
   Uint8List? _selectedFileBytes;
@@ -22,7 +23,7 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
   bool _isAnalyzing = false;
   bool _isSuccess = false;
   bool _isHovering = false;
-  
+
   // Dynamic metrics from backend
   List<String> _detectedAttributes = [];
   double _biasScore = 0.0;
@@ -46,7 +47,8 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
   }
 
   void _pickFile() {
-    final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+    final html.FileUploadInputElement uploadInput =
+        html.FileUploadInputElement();
     uploadInput.accept = '.csv';
     uploadInput.click();
 
@@ -54,7 +56,7 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
       final files = uploadInput.files;
       if (files != null && files.isNotEmpty) {
         final file = files[0];
-        
+
         if (!file.name.toLowerCase().endsWith('.csv')) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -112,16 +114,19 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
   }
 
   Future<void> uploadDatasetToBackend() async {
-    var request = http.MultipartRequest('POST', Uri.parse('http://127.0.0.1:8000/upload-dataset'));
-    request.files.add(http.MultipartFile.fromBytes('file', _selectedFileBytes!, filename: _selectedFileName!));
-    
+    var request = http.MultipartRequest(
+        'POST', Uri.parse('https://verishift.onrender.com/upload-dataset'));
+    request.files.add(http.MultipartFile.fromBytes('file', _selectedFileBytes!,
+        filename: _selectedFileName!));
+
     var response = await request.send();
     if (response.statusCode == 200) {
       final respStr = await response.stream.bytesToString();
       final data = jsonDecode(respStr);
-      
+
       setState(() {
-        _detectedAttributes = List<String>.from(data['sensitive_attributes'] ?? []);
+        _detectedAttributes =
+            List<String>.from(data['sensitive_attributes'] ?? []);
         _missingPercentage = (data['missing_percentage'] ?? 0.0).toDouble();
         _biasScore = (data['bias_score'] ?? 0.0).toDouble();
       });
@@ -142,7 +147,7 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
     if (score < 0.3) return 'Moderate';
     return 'High';
   }
-  
+
   Color _getBiasRiskColor(double score) {
     if (score < 0.1) return const Color(0xFF66BB6A);
     if (score < 0.3) return const Color(0xFFFFB300);
@@ -160,7 +165,9 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
           children: const [
             Icon(Icons.verified_user, color: Color(0xFF00BFA5)),
             SizedBox(width: 8),
-            Text('VeriShift', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('VeriShift',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -179,7 +186,7 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
               },
             ),
           ),
-          
+
           // Main Content
           Center(
             child: SingleChildScrollView(
@@ -190,7 +197,8 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
                 decoration: BoxDecoration(
                   color: const Color(0xFF141420),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+                  border: Border.all(
+                      color: Colors.white.withOpacity(0.15), width: 1),
                 ),
                 padding: const EdgeInsets.all(40.0),
                 child: Column(
@@ -204,25 +212,32 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 48, horizontal: 24),
                           decoration: BoxDecoration(
                             color: const Color(0xFF0A0A0F),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: _selectedFileName != null ? const Color(0xFF00BFA5) : Colors.white.withOpacity(0.15),
+                              color: _selectedFileName != null
+                                  ? const Color(0xFF00BFA5)
+                                  : Colors.white.withOpacity(0.15),
                               width: _selectedFileName != null ? 2 : 1,
                             ),
                           ),
                           child: Column(
                             children: [
                               Icon(
-                                _selectedFileName != null ? Icons.insert_drive_file : Icons.cloud_upload_outlined,
+                                _selectedFileName != null
+                                    ? Icons.insert_drive_file
+                                    : Icons.cloud_upload_outlined,
                                 size: 48,
                                 color: const Color(0xFF00BFA5),
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                _selectedFileName != null ? _selectedFileName! : 'Drop your CSV here',
+                                _selectedFileName != null
+                                    ? _selectedFileName!
+                                    : 'Drop your CSV here',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -232,10 +247,11 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _selectedFileName != null 
+                                _selectedFileName != null
                                     ? _formatBytes(_selectedFileSize)
                                     : 'or click to browse',
-                                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 14),
                               ),
                             ],
                           ),
@@ -243,36 +259,43 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Button / Loading / Success State
                     if (_isAnalyzing) ...[
                       const CircularProgressIndicator(color: Color(0xFF00BFA5)),
                       const SizedBox(height: 16),
                       const Text(
                         'Analyzing dataset for fairness patterns...',
-                        style: TextStyle(color: Color(0xFF00BFA5), fontSize: 14, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: Color(0xFF00BFA5),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500),
                       ),
                     ] else if (_isSuccess) ...[
                       // Dynamic Insights
                       Row(
                         children: [
-                          Expanded(child: _buildInsightCard(
-                            'Sensitive Attributes Detected', 
-                            _detectedAttributes.isEmpty ? 'None' : _detectedAttributes.map((e) => e[0].toUpperCase() + e.substring(1)).join(', '), 
-                            const Color(0xFF00BFA5)
-                          )),
+                          Expanded(
+                              child: _buildInsightCard(
+                                  'Sensitive Attributes Detected',
+                                  _detectedAttributes.isEmpty
+                                      ? 'None'
+                                      : _detectedAttributes
+                                          .map((e) =>
+                                              e[0].toUpperCase() +
+                                              e.substring(1))
+                                          .join(', '),
+                                  const Color(0xFF00BFA5))),
                           const SizedBox(width: 12),
-                          Expanded(child: _buildInsightCard(
-                            'Potential Bias Risk', 
-                            _getBiasRiskLevel(_biasScore), 
-                            _getBiasRiskColor(_biasScore)
-                          )),
+                          Expanded(
+                              child: _buildInsightCard(
+                                  'Potential Bias Risk',
+                                  _getBiasRiskLevel(_biasScore),
+                                  _getBiasRiskColor(_biasScore))),
                           const SizedBox(width: 12),
-                          Expanded(child: _buildInsightCard(
-                            'Missing Values', 
-                            '${_missingPercentage}%', 
-                            Colors.white
-                          )),
+                          Expanded(
+                              child: _buildInsightCard('Missing Values',
+                                  '${_missingPercentage}%', Colors.white)),
                         ],
                       ),
                     ] else ...[
@@ -289,7 +312,8 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
                             boxShadow: _isHovering && _selectedFileName != null
                                 ? [
                                     BoxShadow(
-                                      color: const Color(0xFF00BFA5).withOpacity(0.4),
+                                      color: const Color(0xFF00BFA5)
+                                          .withOpacity(0.4),
                                       blurRadius: 12,
                                       spreadRadius: 2,
                                     )
@@ -297,44 +321,55 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
                                 : [],
                           ),
                           child: ElevatedButton(
-                            onPressed: _selectedFileName != null ? _processUpload : null,
+                            onPressed: _selectedFileName != null
+                                ? _processUpload
+                                : null,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00BFA5),
                               foregroundColor: const Color(0xFF0A0A0F),
-                              disabledBackgroundColor: const Color(0xFF00BFA5).withOpacity(0.5),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              disabledBackgroundColor:
+                                  const Color(0xFF00BFA5).withOpacity(0.5),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
                             ),
                             child: const Text(
                               'Analyze Dataset',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       if (_selectedFileName == null) ...[
                         const Text(
                           'No dataset loaded',
-                          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                          style: TextStyle(
+                              color: Colors.grey, fontStyle: FontStyle.italic),
                         ),
                       ] else ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_circle, color: Color(0xFF00BFA5), size: 18),
+                            const Icon(Icons.check_circle,
+                                color: Color(0xFF00BFA5), size: 18),
                             const SizedBox(width: 8),
                             Text(
                               '$_selectedFileName uploaded successfully',
-                              style: const TextStyle(color: Color(0xFF00BFA5), fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                  color: Color(0xFF00BFA5),
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                       ],
                     ],
-                    
-                    if (!_isSuccess && !_isAnalyzing && _selectedFileName == null) ...[
+
+                    if (!_isSuccess &&
+                        !_isAnalyzing &&
+                        _selectedFileName == null) ...[
                       const SizedBox(height: 32),
                       const Text(
                         'Supported formats: CSV',
@@ -362,9 +397,15 @@ class _UploadDatasetScreenState extends State<UploadDatasetScreen> with SingleTi
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white38, fontSize: 10, height: 1.2)),
+          Text(title,
+              style: const TextStyle(
+                  color: Colors.white38, fontSize: 10, height: 1.2)),
           const SizedBox(height: 8),
-          Text(value, style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(value,
+              style: TextStyle(
+                  color: valueColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -391,13 +432,14 @@ class _DataVisualizationBackgroundPainter extends CustomPainter {
       final startY = 0.0;
       final endX = startX + size.height;
       final endY = size.height;
-      
+
       canvas.drawLine(Offset(startX, startY), Offset(endX, endY), paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DataVisualizationBackgroundPainter oldDelegate) {
+  bool shouldRepaint(
+      covariant _DataVisualizationBackgroundPainter oldDelegate) {
     return oldDelegate.animationValue != animationValue;
   }
 }
