@@ -1,97 +1,197 @@
 """
 Explanation Service
 Generates human-readable bias explanations.
-Uses Gemini API when available, falls back to template explanations.
+Uses Gemini API as the AI governance layer, falls back to deterministic templates.
 """
 
 import os
-from shared.schemas import ExplanationOutput
+import json
+import time
+from dotenv import load_dotenv
 
-# TODO: pip install google-generativeai and set GEMINI_API_KEY in .env
+load_dotenv("backend/.env")
+
 _GEMINI_AVAILABLE = False
+_model = None
+
 try:
     import google.generativeai as genai
     _api_key = os.getenv("GEMINI_API_KEY")
-    if _api_key:
+    if _api_key and _api_key != "YOUR_API_KEY_HERE":
         genai.configure(api_key=_api_key)
-        _model = genai.GenerativeModel("gemini-pro")
+        # Use gemini-1.5-flash and force JSON output for structured governance data
+        _model = genai.GenerativeModel("gemini-1.5-flash", generation_config={"response_mime_type": "application/json"})
         _GEMINI_AVAILABLE = True
-        print("[SUCCESS] Gemini API connected")
+        print("[SUCCESS] Gemini API connected for governance")
     else:
-        print("[WARNING] GEMINI_API_KEY not set - using template explanations")
+        print("[WARNING] GEMINI_API_KEY not set - using deterministic fallbacks")
 except ImportError:
-    print("[WARNING] google-generativeai not installed - using template explanations")
+    print("[WARNING] google-generativeai not installed - using deterministic fallbacks")
 
+# --- CACHE FOR DASHBOARD ---
+_governance_cache = {
+    "last_updated": 0,
+    "last_bias_score": None,
+    "response": None
+}
 
-def _template_explanation(changed_field: str, original_prediction: int, twin_prediction: int) -> str:
-    """Fallback explanation when Gemini is unavailable."""
-    outcome_changed = original_prediction != twin_prediction
-    original_label = "approved" if original_prediction == 1 else "rejected"
-    twin_label = "approved" if twin_prediction == 1 else "rejected"
+def _get_risk_level(bias_score: float) -> str:
+    """Deterministic risk level before Gemini processing."""
+    if bias_score > 0.15:
+        return "Critical"
+    elif bias_score > 0.05:
+        return "Medium"
+    return "Low"
 
-    templates = {
-        "gender": f"Changing gender caused the outcome to shift from {original_label} to {twin_label}. "
-                  f"This indicates the model has learned gender-correlated patterns from historical training data, "
-                  f"which is a form of statistical discrimination.",
-        "income": f"The income change shifted the prediction from {original_label} to {twin_label}. "
-                  f"Income is a strong predictor in this model, but may proxy for protected attributes.",
-        "education": f"Education level change moved the outcome from {original_label} to {twin_label}. "
-                     f"Educational attainment can reflect systemic inequalities in access to opportunity.",
-        "employment_status": f"Employment status change resulted in a shift from {original_label} to {twin_label}. "
-                             f"This feature carries significant weight in the model's decision boundary.",
-        "age": f"Age change moved the prediction from {original_label} to {twin_label}. "
-               f"Age-based variation in outcomes may indicate temporal bias in training data.",
+def _safe_json_parse(text: str, fallback: dict) -> dict:
+    try:
+        # Sometimes models wrap JSON in markdown blocks even with JSON mime type
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return json.loads(text.strip())
+    except Exception as e:
+        print(f"Failed to parse Gemini JSON: {e}")
+        return fallback
+
+# -----------------------------------------------------
+# 1. TWIN ANALYSIS (For /create-twin)
+# -----------------------------------------------------
+
+def generate_twin_analysis(metrics: dict) -> dict:
+    """Generates structured analysis for Twin Simulation."""
+    bias_score = metrics.get("confidence_delta", 0.0)
+    risk_level = _get_risk_level(abs(bias_score))
+    
+    fallback = {
+        "bias_explanation": f"Changing {metrics.get('changed_field')} altered the confidence by {bias_score*100:.0f}%.",
+        "risk_level": risk_level,
+        "recommendations": ["Review model features", "Apply reweighing technique"],
+        "executive_summary": "Simulation indicates potential bias."
     }
 
-    base = templates.get(changed_field, f"{changed_field} change shifted outcome from {original_label} to {twin_label}.")
+    if not _GEMINI_AVAILABLE:
+        return fallback
 
-    if not outcome_changed:
-        base = f"Despite changing {changed_field}, the prediction remained {original_label}. " \
-               f"This suggests other features have stronger influence on this individual's outcome."
-
-    return base
-
-
-def _gemini_explanation(changed_field: str, original_prediction: int, twin_prediction: int,
-                         original_confidence: float, twin_confidence: float) -> str:
-    """Generate explanation using Gemini API."""
     prompt = f"""
-    You are an AI fairness auditor explaining a bias detection result to a non-technical audience.
+    You are an AI fairness auditor. Analyze this counterfactual simulation:
+    - Changed Feature: {metrics.get('changed_field')}
+    - Original Prediction: {metrics.get('original_prediction')} (confidence {metrics.get('original_confidence', 0.0):.0%})
+    - Twin Prediction: {metrics.get('twin_prediction')} (confidence {metrics.get('twin_confidence', 0.0):.0%})
+    - Confidence Delta: {metrics.get('confidence_delta', 0.0):.0%}
+    - Bias Detected: {metrics.get('bias_detected')}
     
-    A counterfactual test was run on an automated decision system:
-    - Only the '{changed_field}' attribute was changed
-    - Original prediction: {'Approved' if original_prediction == 1 else 'Rejected'} (confidence: {original_confidence:.0%})
-    - Twin prediction: {'Approved' if twin_prediction == 1 else 'Rejected'} (confidence: {twin_confidence:.0%})
-    
-    In 2-3 sentences, explain what this means for fairness, why it might happen, 
-    and what risk it poses. Be direct, clear, and avoid jargon.
-    Do not use bullet points. Plain prose only.
+    Provide a professional, concise, audit-oriented analysis.
+    Output ONLY a valid JSON object matching this schema:
+    {{
+        "bias_explanation": "string (why this happened and what it means)",
+        "risk_level": "{risk_level}",
+        "recommendations": ["string", "string"],
+        "executive_summary": "string (1 sentence summary)"
+    }}
     """
     try:
         response = _model.generate_content(prompt)
-        return response.text.strip()
+        return _safe_json_parse(response.text, fallback)
     except Exception as e:
-        print(f"Gemini API error: {e}")
-        return _template_explanation(changed_field, original_prediction, twin_prediction)
+        print(f"Gemini Twin Error: {e}")
+        return fallback
 
+# -----------------------------------------------------
+# 2. GOVERNANCE SUMMARY (For /stream-prediction)
+# -----------------------------------------------------
 
-def explain(original_prediction: int, twin_prediction: int, changed_field: str,
-            original_confidence: float = 0.0, twin_confidence: float = 0.0) -> ExplanationOutput:
+def generate_governance_summary(metrics: dict) -> dict:
+    """Generates structured analysis for Live Dashboard. Uses caching."""
+    global _governance_cache
+    
+    current_bias = metrics.get("bias_score", 0.0)
+    current_time = time.time()
+    
+    # Cache invalidation: re-run if 30s passed OR bias score changed by more than 0.05
+    if _governance_cache["response"] is not None:
+        time_elapsed = current_time - _governance_cache["last_updated"]
+        bias_delta = abs(current_bias - (_governance_cache["last_bias_score"] or 0.0))
+        if time_elapsed < 30 and bias_delta < 0.05:
+            return _governance_cache["response"]
+
+    risk_level = _get_risk_level(current_bias)
+    
+    fallback = {
+        "governance_summary": f"System operating at {risk_level} risk level. Bias score is {current_bias:.2f}.",
+        "recommended_action": "Continue monitoring" if risk_level == "Low" else "Investigate drift immediately.",
+        "risk_level": risk_level
+    }
+
+    if not _GEMINI_AVAILABLE:
+        _governance_cache = {"last_updated": current_time, "last_bias_score": current_bias, "response": fallback}
+        return fallback
+
+    prompt = f"""
+    You are an enterprise AI governance system monitoring live bias drift.
+    Current Live Metrics:
+    - Current Bias Score: {current_bias:.2f}
+    - Affected Group: {metrics.get('affected_group', 'N/A')}
+    - Trend: {metrics.get('trend', 'stable')}
+    
+    Provide a concise, real-time audit summary.
+    Output ONLY a valid JSON object matching this schema:
+    {{
+        "governance_summary": "string (1-2 sentences on system health)",
+        "recommended_action": "string (short mitigation step)",
+        "risk_level": "{risk_level}"
+    }}
     """
-    Generate explanation for why twin prediction differs from original.
-    Uses Gemini if available, template fallback otherwise.
-    """
-    if _GEMINI_AVAILABLE:
-        explanation_text = _gemini_explanation(
-            changed_field, original_prediction, twin_prediction,
-            original_confidence, twin_confidence
-        )
-    else:
-        explanation_text = _template_explanation(changed_field, original_prediction, twin_prediction)
+    try:
+        response = _model.generate_content(prompt)
+        parsed = _safe_json_parse(response.text, fallback)
+        _governance_cache = {"last_updated": current_time, "last_bias_score": current_bias, "response": parsed}
+        return parsed
+    except Exception as e:
+        print(f"Gemini Dashboard Error: {e}")
+        _governance_cache = {"last_updated": current_time, "last_bias_score": current_bias, "response": fallback}
+        return fallback
 
-    return ExplanationOutput(
-        original_prediction=original_prediction,
-        twin_prediction=twin_prediction,
-        changed_field=changed_field,
-        explanation=explanation_text,
-    )
+# -----------------------------------------------------
+# 3. DATASET INSIGHTS (For /upload-dataset)
+# -----------------------------------------------------
+
+def generate_dataset_insights(metrics: dict) -> dict:
+    """Generates structured analysis for Dataset Uploads."""
+    bias_score = metrics.get("bias_score", 0.0)
+    risk_level = _get_risk_level(bias_score)
+    sensitive_attrs = metrics.get("sensitive_attributes", [])
+    
+    fallback = {
+        "dataset_risk_profile": f"Initial analysis shows a {risk_level.lower()} risk profile.",
+        "sensitive_attribute_summary": f"Detected {len(sensitive_attrs)} sensitive attributes: {', '.join(sensitive_attrs)}",
+        "recommended_mitigation": "Balance representation across groups before training."
+    }
+
+    if not _GEMINI_AVAILABLE:
+        return fallback
+
+    prompt = f"""
+    You are an AI fairness auditor analyzing a newly uploaded dataset.
+    Dataset Metrics:
+    - Sensitive Attributes Detected: {sensitive_attrs}
+    - Missing Values: {metrics.get('missing_percentage', 0.0)}%
+    - Baseline Bias Score: {bias_score:.2f}
+    - Calculated Risk Level: {risk_level}
+    
+    Identify potential bias hotspots and risk factors. Do not make speculative claims.
+    Output ONLY a valid JSON object matching this schema:
+    {{
+        "dataset_risk_profile": "string (brief assessment of dataset quality and bias risk)",
+        "sensitive_attribute_summary": "string (implications of the detected attributes)",
+        "recommended_mitigation": "string (data-level mitigation step)"
+    }}
+    """
+    try:
+        response = _model.generate_content(prompt)
+        return _safe_json_parse(response.text, fallback)
+    except Exception as e:
+        print(f"Gemini Upload Error: {e}")
+        return fallback

@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from shared.schemas import PredictionInput, TwinInput, PredictionOutput, ExplanationOutput
 from backend.services.prediction_service import predict
 from backend.services.twin_service import create_twin
-from backend.services.explanation_service import explain
+from backend.services.explanation_service import (
+    generate_twin_analysis,
+    generate_governance_summary,
+    generate_dataset_insights,
+)
 from backend.services.streaming_service import process_stream, get_stream_dashboard_data
 from backend.state import state
 import pandas as pd
