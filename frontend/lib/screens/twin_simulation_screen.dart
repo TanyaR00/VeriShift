@@ -69,12 +69,22 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
       // Dummy response for UI demonstration
       setState(() {
         _explanationResult = {
-          'original_prediction': 0,
-          'twin_prediction': 1,
-          'original_confidence': 72.0,
-          'twin_confidence': 89.0,
-          'explanation':
-              '⚡ $_changedField changed: $_gender → ${_newValueController.text}\n📊 Approval probability increased by 17%\n🔍 Historical patterns show $_changedField bias in training data'
+          'original_prediction': {
+            'result': 'Rejected',
+            'confidence': 0.72
+          },
+          'twin_prediction': {
+            'result': 'Approved',
+            'confidence': 0.89
+          },
+          'bias_detected': true,
+          'bias_summary': '⚡ $_changedField changed: $_gender → ${_newValueController.text}\n📊 Approval probability increased by 17%\n🔍 Historical patterns show $_changedField bias in training data',
+          'top_factors': [
+            {
+              'feature': _changedField,
+              'impact': 0.17
+            }
+          ]
         };
         _showResults = true;
       });
@@ -328,22 +338,20 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                                   fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Text(
-                              _explanationResult?['original_prediction'] == 1
+                              _explanationResult?['original_prediction']?['result'] == 'Approved'
                                   ? 'Approved'
                                   : 'Rejected',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
-                                color: _explanationResult?[
-                                            'original_prediction'] ==
-                                        1
+                                color: _explanationResult?['original_prediction']?['result'] == 'Approved'
                                     ? const Color(0xFF66BB6A)
                                     : const Color(0xFFEF5350),
                               )),
                           const SizedBox(height: 4),
                           AnimatedCounter(
                             value:
-                                ((_explanationResult?['original_confidence'] ??
+                                ((_explanationResult?['original_prediction']?['confidence'] ??
                                         0.72) *
                                     100),
                             suffix: '% confidence',
@@ -382,7 +390,7 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                    '↑ ${((_explanationResult?['confidence_delta'] ?? 0.17) * 100).toStringAsFixed(0)}% boost',
+                                    '↑ ${((_explanationResult?['top_factors']?[0]?['impact'] ?? 0.17) * 100).toStringAsFixed(0)}% boost',
                                     style: TextStyle(
                                         color: Color(0xFF00BFA5),
                                         fontSize: 10,
@@ -392,20 +400,20 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                              _explanationResult?['twin_prediction'] == 1
+                              _explanationResult?['twin_prediction']?['result'] == 'Approved'
                                   ? 'Approved'
                                   : 'Rejected',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color:
-                                    _explanationResult?['twin_prediction'] == 1
+                                    _explanationResult?['twin_prediction']?['result'] == 'Approved'
                                         ? const Color(0xFF66BB6A)
                                         : const Color(0xFFEF5350),
                               )),
                           const SizedBox(height: 4),
                           AnimatedCounter(
-                            value: ((_explanationResult?['twin_confidence'] ??
+                            value: ((_explanationResult?['twin_prediction']?['confidence'] ??
                                     0.89) *
                                 100),
                             suffix: '% confidence',
@@ -429,7 +437,7 @@ class _TwinSimulationScreenState extends State<TwinSimulationScreen> {
                       bottomRight: Radius.circular(8)),
                 ),
                 child: Text(
-                  _explanationResult?['explanation'] ?? '',
+                  _explanationResult?['bias_summary'] ?? '',
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     color: Colors.white,

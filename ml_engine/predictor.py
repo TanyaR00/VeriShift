@@ -19,10 +19,10 @@ try:
     _scaler = joblib.load(os.path.join(_ARTIFACTS_PATH, "scaler.joblib"))
     _encoders = joblib.load(os.path.join(_ARTIFACTS_PATH, "encoders.joblib"))
     _model_loaded = True
-    print("✅ ML model artifacts loaded successfully")
+    print("[SUCCESS] ML model artifacts loaded successfully")
 except FileNotFoundError:
     _model_loaded = False
-    print("⚠️  Model artifacts not found — run bias_intelligence.py first to train and save the model")
+    print("[WARNING] Model artifacts not found - run bias_intelligence.py first to train and save the model")
 
 
 def _input_to_dataframe(data: PredictionInput) -> pd.DataFrame:

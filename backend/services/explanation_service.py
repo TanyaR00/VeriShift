@@ -16,11 +16,11 @@ try:
         genai.configure(api_key=_api_key)
         _model = genai.GenerativeModel("gemini-pro")
         _GEMINI_AVAILABLE = True
-        print("✅ Gemini API connected")
+        print("[SUCCESS] Gemini API connected")
     else:
-        print("⚠️  GEMINI_API_KEY not set — using template explanations")
+        print("[WARNING] GEMINI_API_KEY not set - using template explanations")
 except ImportError:
-    print("⚠️  google-generativeai not installed — using template explanations")
+    print("[WARNING] google-generativeai not installed - using template explanations")
 
 
 def _template_explanation(changed_field: str, original_prediction: int, twin_prediction: int) -> str:
